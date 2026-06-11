@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-label="AI装修系统预览">
+  <rect width="1200" height="720" fill="#efe8dc"/>
+  <rect x="72" y="72" width="1056" height="576" rx="18" fill="#ffffff" stroke="#d8cfc2" stroke-width="2"/>
+  <rect x="96" y="104" width="272" height="496" rx="12" fill="#f6f3ee"/>
+  <rect x="400" y="104" width="680" height="330" rx="12" fill="#17202a"/>
+  <rect x="428" y="132" width="624" height="274" rx="10" fill="#c9b18d"/>
+  <path d="M428 342 C560 284 660 360 760 300 C866 238 940 290 1052 220 L1052 406 L428 406 Z" fill="#5f7f68" opacity=".72"/>
+  <rect x="428" y="132" width="168" height="274" fill="#f6f3ee" opacity=".36"/>
+  <rect x="428" y="132" width="624" height="46" fill="#ffffff" opacity=".26"/>
+  <circle cx="872" cy="268" r="34" fill="#ffffff" opacity=".9"/>
+  <text x="438" y="388" font-family="Microsoft YaHei, Arial" font-size="28" fill="#ffffff">客餐厅 · 奶油风预览</text>
+  <rect x="400" y="462" width="140" height="100" rx="8" fill="#f6f3ee" stroke="#b78d43" stroke-width="4"/>
+  <rect x="560" y="462" width="140" height="100" rx="8" fill="#f6f3ee"/>
+  <rect x="720" y="462" width="140" height="100" rx="8" fill="#f6f3ee"/>
+  <rect x="880" y="462" width="140" height="100" rx="8" fill="#f6f3ee"/>
+  <text x="128" y="150" font-family="Microsoft YaHei, Arial" font-size="26" font-weight="700" fill="#17202a">项目工作台</text>
+  <rect x="128" y="188" width="190" height="34" rx="5" fill="#5f7f68"/>
+  <rect x="128" y="246" width="190" height="20" rx="4" fill="#cfc6ba"/>
+  <rect x="128" y="282" width="154" height="20" rx="4" fill="#cfc6ba"/>
+  <rect x="128" y="344" width="210" height="82" rx="8" fill="#ffffff" stroke="#ded6ca"/>
+  <text x="146" y="392" font-family="Microsoft YaHei, Arial" font-size="22" fill="#17202a">风格对话调整</text>
+  <rect x="128" y="450" width="210" height="82" rx="8" fill="#ffffff" stroke="#ded6ca"/>
+  <text x="146" y="498" font-family="Microsoft YaHei, Arial" font-size="22" fill="#17202a">批量生成房间</text>
+</svg>

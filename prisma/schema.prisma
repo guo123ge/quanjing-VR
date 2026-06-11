@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id             String                      @id @default(cuid())
+  title          String
+  unitNo         String                      @default("")
+  clientName     String                      @default("")
+  brandName      String                      @default("AI全景装修")
+  status         ProjectStatus               @default(DRAFT)
+  workflowStatus WorkflowStatus              @default(CREATED)
+  designBrief    String                      @default("")
+  promptOverrides String                     @default("")
+  selectedStyleId String?
+  selectedProvider ImageProvider             @default(OPENAI)
+  previewImageUrl String?
+  coverUrl        String?
+  viewCount       Int                        @default(0)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  floorplans      FloorplanAsset[]
+  rooms           DetectedRoom[]
+  references      ReferenceImage[]
+  conversations   DesignConversationMessage[]
+  jobs            GenerationJob[]
+  scenes          Scene[]
+}
+
+model FloorplanAsset {
+  id             String             @id @default(cuid())
+  projectId      String
+  project        Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fileType       FloorplanFileType
+  originalName   String
+  fileUrl        String
+  previewUrl     String?
+  size           Int
+  width          Int?
+  height         Int?
+  pageCount      Int?
+  selectedPage   Int?
+  status         DetectionStatus    @default(UPLOADED)
+  errorMessage   String?
+  suggestionsJson String            @default("[]")
+  createdAt      DateTime           @default(now())
+}
+
+model DetectedRoom {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name         String
+  roomType     RoomType
+  confidence   Float     @default(0.8)
+  adjacencyJson String   @default("[]")
+  order        Int
+  createdAt    DateTime  @default(now())
+  scenes       Scene[]
+  tasks        GenerationTask[]
+}
+
+model DesignStyle {
+  id           String   @id
+  name         String
+  summary      String
+  keywords     String
+  palette      String
+  materials    String
+  lighting     String
+  negative     String
+  roomTips     String
+  sortOrder    Int
+  createdAt    DateTime @default(now())
+}
+
+model ReferenceImage {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  originalName String
+  fileUrl      String
+  thumbnailUrl String?
+  size         Int
+  width        Int?
+  height       Int?
+  createdAt    DateTime @default(now())
+}
+
+model DesignConversationMessage {
+  id        String      @id @default(cuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  content   String
+  createdAt DateTime    @default(now())
+}
+
+model GenerationJob {
+  id          String          @id @default(cuid())
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider    ImageProvider
+  model       String
+  status      JobStatus       @default(QUEUED)
+  kind        JobKind
+  progress    Int             @default(0)
+  errorMessage String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  tasks       GenerationTask[]
+}
+
+model GenerationTask {
+  id          String     @id @default(cuid())
+  jobId       String
+  job         GenerationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  roomId      String?
+  room        DetectedRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  status      TaskStatus @default(QUEUED)
+  prompt      String
+  imageUrl    String?
+  errorMessage String?
+  retryCount  Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Scene {
+  id          String     @id @default(cuid())
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roomId      String?
+  room        DetectedRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  name        String
+  renderMode  RenderMode @default(FLAT)
+  imageUrl    String
+  thumbnailUrl String
+  order       Int
+  initialYaw  Float      @default(0)
+  initialPitch Float     @default(0)
+  createdAt   DateTime   @default(now())
+  hotspots    Hotspot[]
+}
+
+model Hotspot {
+  id            String   @id @default(cuid())
+  sceneId       String
+  scene         Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  targetSceneId String
+  label         String
+  yaw           Float    @default(0)
+  pitch         Float    @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model UploadedAsset {
+  id          String   @id @default(cuid())
+  purpose     AssetPurpose
+  originalName String
+  fileUrl      String
+  thumbnailUrl String?
+  size         Int
+  width        Int?
+  height       Int?
+  mimeType     String
+  createdAt    DateTime @default(now())
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum WorkflowStatus {
+  CREATED
+  FLOORPLAN_UPLOADED
+  ROOM_DETECTING
+  ROOM_DETECT_FAILED
+  STYLE_SELECTED
+  STYLE_PREVIEW_READY
+  GENERATING_SCENES
+  PARTIAL_FAILED
+  READY_FOR_REVIEW
+  PUBLISHED
+}
+
+enum FloorplanFileType {
+  IMAGE
+  PDF
+  DXF
+}
+
+enum DetectionStatus {
+  UPLOADED
+  DETECTING
+  SUCCEEDED
+  FAILED
+}
+
+enum RoomType {
+  LIVING_DINING
+  BEDROOM
+  KITCHEN
+  BATHROOM
+  STUDY
+  BALCONY
+  STORAGE
+  ENTRY
+  OTHER
+}
+
+enum ImageProvider {
+  OPENAI
+  ALIYUN
+  VOLCENGINE
+  TENCENT
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  PARTIAL_FAILED
+  FAILED
+}
+
+enum JobKind {
+  STYLE_PREVIEW
+  ROOM_BATCH
+}
+
+enum TaskStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum RenderMode {
+  FLAT
+  PANORAMA
+}
+
+enum AssetPurpose {
+  FLOORPLAN
+  REFERENCE
+  GENERATED
+  THUMBNAIL
+}
