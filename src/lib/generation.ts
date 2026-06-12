@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { prisma } from "./db";
 import { generateImage } from "./providers";
 import { buildRoomPrompt, buildStylePrompt } from "./prompts";
-import { makeId, publicUploadPath, rootDir, uploadDir } from "./paths";
+import { makeId, publicUploadPath, rootDir, stripBasePath, uploadDir } from "./paths";
 
 export async function generateStylePreview(projectId: string) {
   const project = await getProjectBundle(projectId);
@@ -170,7 +170,7 @@ async function getProjectBundle(projectId: string) {
 }
 
 async function createThumbnailFromPublicUrl(publicUrl: string) {
-  const sourcePath = path.join(rootDir, "public", publicUrl.replace(/^\//, ""));
+  const sourcePath = path.join(rootDir, "public", stripBasePath(publicUrl).replace(/^\//, ""));
   const fileName = `${makeId("scene-thumb")}.webp`;
   await sharp(sourcePath, { failOn: "none" })
     .resize(420, 280, { fit: "cover", position: "center" })

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ProjectStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const projects = await prisma.project.findMany({
     where: { status: ProjectStatus.PUBLISHED },

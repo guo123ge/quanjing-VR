@@ -4,13 +4,16 @@ import { ImageProvider } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const apiPath = (path: string) => `${basePath}${path}`;
+
 export function CreateProjectForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function submit(formData: FormData) {
     setBusy(true);
-    const response = await fetch("/api/projects", {
+    const response = await fetch(apiPath("/api/projects"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -46,7 +49,7 @@ export function UploadFloorplanForm({ projectId }: { projectId: string }) {
 
   async function submit(formData: FormData) {
     setBusy(true);
-    const response = await fetch(`/api/projects/${projectId}/floorplan`, { method: "POST", body: formData });
+    const response = await fetch(apiPath(`/api/projects/${projectId}/floorplan`), { method: "POST", body: formData });
     const data = await response.json();
     setBusy(false);
     if (!response.ok) alert(data.error ?? "上传失败");
@@ -88,7 +91,7 @@ export function StyleAndReferenceForm({
 
   async function saveStyle(formData: FormData) {
     setBusy(true);
-    const response = await fetch(`/api/projects/${projectId}/style`, {
+    const response = await fetch(apiPath(`/api/projects/${projectId}/style`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -106,7 +109,7 @@ export function StyleAndReferenceForm({
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) return;
     setBusy(true);
-    const response = await fetch(`/api/projects/${projectId}/reference`, { method: "POST", body: formData });
+    const response = await fetch(apiPath(`/api/projects/${projectId}/reference`), { method: "POST", body: formData });
     const data = await response.json();
     setBusy(false);
     if (!response.ok) alert(data.error ?? "上传参考图失败");
@@ -154,7 +157,7 @@ export function ConversationForm({ projectId }: { projectId: string }) {
     const message = String(formData.get("message") ?? "");
     if (!message.trim()) return;
     setBusy(true);
-    const response = await fetch(`/api/projects/${projectId}/conversation`, {
+    const response = await fetch(apiPath(`/api/projects/${projectId}/conversation`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
@@ -187,7 +190,7 @@ export function GenerationButtons({ projectId }: { projectId: string }) {
 
   async function post(path: string, label: string) {
     setBusy(label);
-    const response = await fetch(`/api/projects/${projectId}/${path}`, { method: "POST" });
+    const response = await fetch(apiPath(`/api/projects/${projectId}/${path}`), { method: "POST" });
     const data = await response.json();
     setBusy("");
     if (!response.ok) alert(data.error ?? `${label}失败`);

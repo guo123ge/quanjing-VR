@@ -7,6 +7,7 @@ ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-change-this-password}"
 OPENAI_API_KEY="${OPENAI_API_KEY:-}"
 OPENAI_IMAGE_MODEL="${OPENAI_IMAGE_MODEL:-gpt-image-2}"
+NEXT_PUBLIC_BASE_PATH="${NEXT_PUBLIC_BASE_PATH:-/quanjing}"
 
 if command -v sudo >/dev/null 2>&1; then
   SUDO=sudo
@@ -37,6 +38,7 @@ cd "$APP_ROOT"
 
 npm ci
 export DATABASE_URL="file:../data/panorama.db"
+export NEXT_PUBLIC_BASE_PATH
 npx prisma generate
 npx prisma db push
 npm run seed
@@ -44,6 +46,7 @@ npm run build
 
 cat > "$APP_ROOT/.env.production" <<EOF
 DATABASE_URL=file:../data/panorama.db
+NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 ADMIN_USERNAME=${ADMIN_USERNAME}
 ADMIN_PASSWORD=${ADMIN_PASSWORD}
 OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -61,6 +64,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         DATABASE_URL: "file:../data/panorama.db",
+        NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH}",
         ADMIN_USERNAME: "${ADMIN_USERNAME}",
         ADMIN_PASSWORD: "${ADMIN_PASSWORD}",
         OPENAI_API_KEY: "${OPENAI_API_KEY}",

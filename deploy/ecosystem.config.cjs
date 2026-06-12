@@ -8,6 +8,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         DATABASE_URL: "file:../data/panorama.db",
+        NEXT_PUBLIC_BASE_PATH: "/quanjing",
         ADMIN_USERNAME: "admin",
         ADMIN_PASSWORD: "change-this-password",
       },
