@@ -71,9 +71,9 @@ pm2 start deploy/ecosystem.config.cjs
 pm2 save
 ```
 
-推荐端口为 `3002`，避免和已有 `3000/3001` 服务冲突。
+推荐端口为 `3002`，避免和已有 `3000/3001` 服务冲突。共享服务器上建议挂载到 `/quanjing/`，不要替换现有 `location /`。
 
-Nginx 可参考 `deploy/nginx-ai-panorama-renovation.conf`。
+Nginx 可参考 `deploy/nginx-ai-panorama-renovation.conf`，把其中 location 片段加入当前 IP 或域名 server block。
 
 ## 备份
 
