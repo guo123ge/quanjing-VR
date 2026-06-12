@@ -112,3 +112,63 @@ textarea {
     linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+.aura-console {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 78% 14%, rgba(168, 85, 247, 0.28), transparent 30%),
+    radial-gradient(circle at 22% 8%, rgba(56, 189, 248, 0.22), transparent 32%),
+    linear-gradient(135deg, #061225 0%, #090b22 46%, #151024 100%);
+  color: #f8fafc;
+}
+
+.aura-console .surface-card,
+.aura-glass {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.76), rgba(15, 23, 42, 0.52));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 56px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(18px);
+}
+
+.aura-console .glass-panel {
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.28), rgba(15, 23, 42, 0.66));
+  box-shadow: 0 0 38px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.aura-console .input-field {
+  border-color: rgba(125, 211, 252, 0.32);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+}
+
+.aura-console .input-field::placeholder {
+  color: rgba(203, 213, 225, 0.52);
+}
+
+.aura-console .btn-primary {
+  background: linear-gradient(90deg, #7c3aed, #38bdf8);
+  box-shadow: 0 0 28px rgba(139, 92, 246, 0.34);
+}
+
+.aura-console .btn-secondary {
+  border-color: rgba(125, 211, 252, 0.38);
+  background: rgba(15, 23, 42, 0.58);
+  color: #f8fafc;
+}
+
+.aura-console .eyebrow {
+  color: #c084fc;
+}
+
+.aura-scanline {
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.aura-neon-border {
+  box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.32), 0 0 26px rgba(56, 189, 248, 0.2);
+}
