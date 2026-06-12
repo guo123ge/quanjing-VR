@@ -1,6 +1,7 @@
 import { ImageProvider } from "@prisma/client";
 import { promises as fs } from "fs";
 import path from "path";
+import sharp from "sharp";
 import { makeId, publicUploadPath, uploadDir } from "./paths";
 import type { GenerationResult, ProviderStatus } from "./types";
 
@@ -80,9 +81,12 @@ export async function generateImage(input: {
   }
 
   await fs.mkdir(uploadDir, { recursive: true });
-  const fileName = `${makeId("generated")}.png`;
+  const fileName = `${makeId("generated")}.webp`;
   const filePath = path.join(uploadDir, fileName);
-  await fs.writeFile(filePath, Buffer.from(b64, "base64"));
+  await sharp(Buffer.from(b64, "base64"), { failOn: "none" })
+    .resize({ width: 1536, withoutEnlargement: true })
+    .webp({ quality: 88 })
+    .toFile(filePath);
 
   return {
     imageUrl: publicUploadPath(fileName),

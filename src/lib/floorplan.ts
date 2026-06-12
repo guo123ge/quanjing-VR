@@ -1,6 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { DetectionStatus, FloorplanFileType, RoomType, WorkflowStatus } from "@prisma/client";
+import { createCanvas } from "@napi-rs/canvas";
+import sharp from "sharp";
 import { prisma } from "./db";
 import { makeId, publicUploadPath, uploadDir } from "./paths";
 import { requirementFor } from "./requirements";
@@ -63,21 +65,26 @@ export async function ingestFloorplan(projectId: string, file: File) {
 
   try {
     if (fileType === FloorplanFileType.IMAGE) {
-      const dimensions = readBasicImageDimensions(saved.buffer);
-      width = dimensions?.width ?? null;
-      height = dimensions?.height ?? null;
-      if (width && height && (width < 1200 || height < 900)) {
+      const image = sharp(saved.buffer, { failOn: "none" });
+      const meta = await image.metadata();
+      width = meta.width ?? null;
+      height = meta.height ?? null;
+      if (!width || !height) throw new Error("无法读取图片尺寸，请上传 JPG、PNG 或 WebP 户型图。");
+      if (width < 1200 || height < 900) {
         throw new Error("图片像素过低，建议不低于 2000 x 1500，推荐长边 3000 像素以上。");
       }
-      previewUrl = saved.fileUrl;
+      previewUrl = await createImagePreview(saved.buffer, "floorplan-preview", 1800);
       rooms = inferRoomsFromName(file.name);
     } else if (fileType === FloorplanFileType.PDF) {
-      pageCount = 1;
-      previewUrl = null;
-      rooms = inferRoomsFromName(file.name);
       if (saved.buffer.subarray(0, 4).toString() !== "%PDF") {
         throw new Error("PDF 文件头不合法，请重新导出无加密 PDF。");
       }
+      pageCount = estimatePdfPageCount(saved.buffer);
+      const pdfPreview = await renderPdfFirstPage(saved.buffer);
+      previewUrl = pdfPreview.previewUrl;
+      width = pdfPreview.width;
+      height = pdfPreview.height;
+      rooms = inferRoomsFromName(file.name);
     } else {
       previewUrl = null;
       rooms = detectRoomsFromDxf(saved.buffer.toString("utf8"));
@@ -138,8 +145,9 @@ export async function ingestFloorplan(projectId: string, file: File) {
 export async function saveReferenceImage(projectId: string, file: File) {
   if (!file.type.startsWith("image/")) throw new Error("参考图只支持 JPG、PNG 或 WebP。");
   const saved = await saveUploadedFile(file, "reference");
-  const meta = readBasicImageDimensions(saved.buffer);
-  const thumbnailUrl = saved.fileUrl;
+  const image = sharp(saved.buffer, { failOn: "none" });
+  const meta = await image.metadata();
+  const thumbnailUrl = await createImagePreview(saved.buffer, "reference-thumb", 720);
   return prisma.referenceImage.create({
     data: {
       projectId,
@@ -162,23 +170,53 @@ function extensionFromFile(file: File) {
   return ".jpg";
 }
 
-function readBasicImageDimensions(buffer: Buffer) {
-  if (buffer.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" && buffer.length > 24) {
-    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+async function createImagePreview(buffer: Buffer, prefix: string, width: number) {
+  const fileName = `${makeId(prefix)}.webp`;
+  await sharp(buffer, { failOn: "none" })
+    .rotate()
+    .resize({ width, withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toFile(path.join(uploadDir, fileName));
+  return publicUploadPath(fileName);
+}
+
+async function renderPdfFirstPage(buffer: Buffer) {
+  try {
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const doc = await pdfjs.getDocument({
+      data: new Uint8Array(buffer),
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      disableFontFace: true,
+    }).promise;
+    const page = await doc.getPage(1);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(3, Math.max(1.2, 1800 / baseViewport.width));
+    const viewport = page.getViewport({ scale });
+    const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: context as never, viewport }).promise;
+    const fileName = `${makeId("pdf-preview")}.png`;
+    await sharp(canvas.toBuffer("image/png"), { failOn: "none" })
+      .resize({ width: 1800, withoutEnlargement: true })
+      .png({ quality: 90 })
+      .toFile(path.join(uploadDir, fileName));
+    return {
+      previewUrl: publicUploadPath(fileName),
+      width: canvas.width,
+      height: canvas.height,
+    };
+  } catch {
+    throw new Error("PDF 单页预览渲染失败，请上传未加密的矢量 PDF，或导出为高清图片后重试。");
   }
-  if (buffer.subarray(0, 3).toString("hex") === "ffd8ff") {
-    let offset = 2;
-    while (offset < buffer.length) {
-      if (buffer[offset] !== 0xff) break;
-      const marker = buffer[offset + 1];
-      const length = buffer.readUInt16BE(offset + 2);
-      if (marker >= 0xc0 && marker <= 0xc3) {
-        return { height: buffer.readUInt16BE(offset + 5), width: buffer.readUInt16BE(offset + 7) };
-      }
-      offset += 2 + length;
-    }
-  }
-  return null;
+}
+
+function estimatePdfPageCount(buffer: Buffer) {
+  const text = buffer.toString("latin1");
+  const matches = text.match(/\/Type\s*\/Page\b/g);
+  return Math.max(1, matches?.length ?? 1);
 }
 
 function inferRoomsFromName(name: string): DetectedRoomInput[] {

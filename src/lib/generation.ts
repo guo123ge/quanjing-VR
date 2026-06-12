@@ -1,7 +1,10 @@
 import { ImageProvider, JobKind, JobStatus, RenderMode, TaskStatus, WorkflowStatus } from "@prisma/client";
+import path from "path";
+import sharp from "sharp";
 import { prisma } from "./db";
 import { generateImage } from "./providers";
 import { buildRoomPrompt, buildStylePrompt } from "./prompts";
+import { makeId, publicUploadPath, rootDir, uploadDir } from "./paths";
 
 export async function generateStylePreview(projectId: string) {
   const project = await getProjectBundle(projectId);
@@ -91,6 +94,7 @@ export async function generateRoomBatch(projectId: string) {
     });
     try {
       const result = await generateImage({ provider: project.selectedProvider, prompt });
+      const thumbUrl = await createThumbnailFromPublicUrl(result.imageUrl);
       await prisma.scene.create({
         data: {
           projectId,
@@ -98,7 +102,7 @@ export async function generateRoomBatch(projectId: string) {
           name: room.name,
           renderMode: RenderMode.FLAT,
           imageUrl: result.imageUrl,
-          thumbnailUrl: result.imageUrl,
+          thumbnailUrl: thumbUrl,
           order: room.order,
         },
       });
@@ -163,4 +167,14 @@ async function getProjectBundle(projectId: string) {
       rooms: true,
     },
   });
+}
+
+async function createThumbnailFromPublicUrl(publicUrl: string) {
+  const sourcePath = path.join(rootDir, "public", publicUrl.replace(/^\//, ""));
+  const fileName = `${makeId("scene-thumb")}.webp`;
+  await sharp(sourcePath, { failOn: "none" })
+    .resize(420, 280, { fit: "cover", position: "center" })
+    .webp({ quality: 78 })
+    .toFile(path.join(uploadDir, fileName));
+  return publicUploadPath(fileName);
 }
